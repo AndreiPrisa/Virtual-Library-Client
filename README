@@ -1,0 +1,67 @@
+================================================================================
+                                    README
+================================================================================
+
+Structura fisierului sursa client.c se bazeaza pe laboratorul 10. De asemenea,
+folosesc functiile din request.c, din buffer.c si din helper.c pentru a realiza
+comenzile de GET, POST, iar pentru comanda DELETE, folosesc functia
+compute_delete_request, scrisa exact la fel, cu acelasi antet si corp, cu
+functia compute_get_request (diferenta aparare la numele metodei, DELETE in
+loc de GET). De asemenea, functiile au fost putin alterate, adaugand in antet
+campul JWT_token pe care il punem, daca exista, in mesaj.
+
+Pentru parsare, m-am folosit de parson.c recomandat in tema. In fiecare functie,
+in momentul in care detectez ca in raspunsul de la server am cuvantul cheie
+"error", apelez functia ajutatoare print_error si parsez JSON-ul si afisez
+mesajul de eroare trimis de server.
+
+Makefile contine si comanda make run care ruleaza ./client
+
+in main.c din client.c, am un while in care redeschid conexiunea de fiecare
+data cand parsez inputul de la tastatura. In cazul in care inputul nu
+corespunde unei comenzi valide, afisez eroarea "[ERROR] Invalid command!"
+Functiile utilizate pentru a implementa comenzile la server:
+
+- register_user - functie utilizata pentru comanda register, permit introducerea
+campurilor de username si de password, folosind json_object_set_string imi
+construiesc string-ul json, apoi trimit la server comanda POST
+corecta. In caz de succes (nu detectez in raspuns "error"), afisez
+"[SUCCESS] User registered successfully!". In main, nu se poate intra in
+aceasta functie daca sunt deja conectat (se afiseaza 
+"[ERROR] You are already logged in!").
+
+- login_user - functie pentru a implementa comanda login, permite introducerea
+campurilor de username si de password, iar in cazul in care nu avem eroare,
+afisam "[SUCCESS] User connected successfully!" si extrag cu strstr cookie-ul
+de login (salvat in variabila globala login_cooke). Nu se poate intra pe
+aceasta functie daca deja sunt logat (Trebuie intai un logout).
+
+- enter_library - functie pentru a realiza comanda enter_library. Trimitem
+request-ul de GET corespunzator (punand cookie-ul de login daca exista, sau
+nu, daca este null) si in cazul in care nu avem eroare, afisam mesajul
+"[SUCCESS] Token received!" si extragem cu functia json_parse_string si
+json_object_get_string token-ul pe care il salvam in variabila globala
+JWT_Token.
+
+- get_books - functie pentru implementarea comenzii get_books, compunem
+mesajul GET, punand si JWT_Token. Daca nu avem eroare, afisam lista cu toate
+cartile din library, daca nu exista nici una, afisam "Bookshelf empty!".
+Extragem id-urile si titlurile folosindu-ma de JSON_Array si functiile
+aferente, identificand inceputul de json string facand strstr pentru a gasi
+"[".
+
+- add_book - functie pentru a implementa comanda add_book, permit introducerea
+campurilor aferente, iar atunci cand imi construiesc json string-ul si detectez
+ca utilizatorul nu a introdus nimic, setez campul pe 0 pentru a genera eroarea
+de tipul "[blank] is missing!" de la server. In caz de succes, afisez
+"[SUCCESS] Book added successfully!".
+
+- delete_book - functie de implementare a comenzii de delete_book, cer id-ul si
+construiesc json string-ul necesar pentru comanda DELETE. Daca nu avem eroare,
+afisam "[SUCCESS] Book deleted successfully!".
+
+- logout_user - functie pentru a implementa comanda logout, compun mesajul GET
+corespunzator, apoi, in caz de succes, afisez "[SUCCESS] Logout successful!" si
+imi setez pe null cookie-ul de login si token-ul de JWT.
+
+- comanda exit se realizeaza dand break in main cand este detectata.
